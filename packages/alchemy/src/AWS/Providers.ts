@@ -1009,6 +1009,9 @@ export const providers = () =>
             ACM.AccountConfigurationProvider(),
           ),
           flociDual(ACM.Certificate, () => ACM.CertificateProvider()),
+          flociDual(ACM.CertificateValidation, () =>
+            ACM.CertificateValidationProvider(),
+          ),
           AMP.AlertManagerDefinitionProvider(),
           AMP.AnomalyDetectorProvider(),
           AMP.LoggingConfigurationProvider(),

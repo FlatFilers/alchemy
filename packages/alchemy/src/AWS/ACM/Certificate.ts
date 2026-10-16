@@ -763,7 +763,7 @@ const defaultValidationMethod = "DNS" as const;
  * Region an existing certificate lives in, parsed from its ARN
  * (`arn:aws:acm:{region}:{account}:certificate/...`).
  */
-const regionOfCertificateArn = (certificateArn: string) =>
+export const regionOfCertificateArn = (certificateArn: string) =>
   certificateArn.split(":")[3] || ACM_REGION;
 
 const withAcmRegion = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
@@ -777,7 +777,7 @@ const withAcmRegion = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
  * new certificates (default `us-east-1`), or the region parsed from an
  * existing certificate's ARN.
  */
-const withCertRegion =
+export const withCertRegion =
   (region: string | undefined) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>) =>
     effect.pipe(
