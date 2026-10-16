@@ -142,7 +142,7 @@ catalog:
   fast-xml-parser: "^5.10.1"
   foldkit: "^0.160.0"
   heap-js: "^2.5.0"
-  hono: "^4.12.14"
+  hono: "^4.13.7"
   http-cache-semantics: "^4.2.0"
   husky: "^9.1.7"
   iovalkey: "^0.3.3"
