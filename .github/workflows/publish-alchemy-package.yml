@@ -1,0 +1,79 @@
+name: Publish alchemy to GitHub Packages
+
+# Publishes the fork's `packages/alchemy` to the FlatFilers npm registry on
+# GitHub Packages (https://npm.pkg.github.com) so internal consumers can depend
+# on fork-only resources before they land upstream.
+#
+# Why the scope rewrite: GitHub Packages requires a scoped package name owned by
+# the repository's org. The repo keeps `"name": "alchemy"` (upstream-compatible,
+# so future upstream merges stay clean) and this workflow rewrites the name to
+# `@flatfilers/alchemy` only inside the publish step.
+#
+# Consumers install it with:
+#   //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+#   @flatfilers:registry=https://npm.pkg.github.com
+# and import `@flatfilers/alchemy`, `@flatfilers/alchemy/Vercel`, etc. — the
+# subpath exports are unchanged by the scope.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (default: package.json version + -fork.<short sha>)'
+        required: false
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - 'packages/alchemy/**'
+
+concurrency:
+  group: publish-alchemy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Build & publish @flatfilers/alchemy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the package
+        working-directory: packages/alchemy
+        run: bun scripts/build.ts
+
+      - name: Rewrite scope, version and workspace deps for GitHub Packages
+        working-directory: packages/alchemy
+        run: |
+          SHORT_SHA="$(git rev-parse --short HEAD)"
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            BASE="$(node -p "require('./package.json').version")"
+            VERSION="${BASE}-fork.${SHORT_SHA}"
+          fi
+          node scripts/rewrite-workspace-deps.mjs "$VERSION"
+
+      - name: Publish
+        working-directory: packages/alchemy
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat > .npmrc <<'EOF'
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          @flatfilers:registry=https://npm.pkg.github.com
+          EOF
+          npm publish --registry=https://npm.pkg.github.com
