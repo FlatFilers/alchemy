@@ -229,7 +229,7 @@ catalogs:
   solid-v1:
     "@solidjs/router": "^0.15.0"
     "@solidjs/start": "2.0.0-alpha.2"
-    vite: "^7.0.0"
+    vite: "^7.3.7"
   tanstack-start-legacy:
     "@types/node": "^22.10.2"
     "@vitejs/plugin-react": "^5.1.4"
